@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เฉลยการบ้าน AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --card: #16161f;
+    --border: #2a2a3a;
+    --accent: #6c63ff;
+    --accent2: #00e5ff;
+    --text: #e8e8f0;
+    --muted: #6b6b85;
+    --success: #00d4a1;
+    --error: #ff4d6d;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Sarabun', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(108,99,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(108,99,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    padding: 40px 0 36px;
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .logo-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 0 20px rgba(108,99,255,0.4);
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    background: linear-gradient(90deg, #fff 40%, var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    margin-top: 6px;
+  }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 20px;
+    padding: 40px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: var(--card);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(108,99,255,0.06);
+    box-shadow: 0 0 30px rgba(108,99,255,0.15);
+  }
+
+  .upload-zone input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+
+  .upload-icon { font-size: 48px; margin-bottom: 12px; }
+
+  .upload-text {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .upload-sub {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* Preview */
+  #preview-wrap {
+    display: none;
+    margin-top: 20px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+
+  #preview-img {
+    width: 100%;
+    max-height: 380px;
+    object-fit: contain;
+    background: #000;
+    display: block;
+  }
+
+  .remove-btn {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: rgba(0,0,0,0.7);
+    border: none;
+    color: #fff;
+    border-radius: 50%;
+    width: 32px; height: 32px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+
+  .remove-btn:hover { background: var(--error); }
+
+  /* Solve button */
+  .solve-btn {
+    width: 100%;
+    margin-top: 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    border: none;
+    border-radius: 14px;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 700;
+    font-family: 'Sarabun', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 20px rgba(108,99,255,0.3);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+
+  .solve-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(108,99,255,0.45);
+  }
+
+  .solve-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Loading */
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .spinner {
+    width: 48px; height: 48px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  /* Result */
+  #result-section {
+    display: none;
+    margin-top: 28px;
+    animation: fadeUp 0.4s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .result-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(0,212,161,0.15);
+    color: var(--success);
+    border: 1px solid rgba(0,212,161,0.3);
+  }
+
+  /* Answer box */
+  .answer-box {
+    background: linear-gradient(135deg, rgba(108,99,255,0.12), rgba(0,229,255,0.06));
+    border: 1px solid rgba(108,99,255,0.3);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+
+  .answer-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent2);
+    margin-bottom: 8px;
+  }
+
+  .answer-text {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.5;
+  }
+
+  /* Steps table */
+  .steps-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .steps-card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(108,99,255,0.06);
+  }
+
+  .steps-card-header span {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead tr {
+    background: rgba(255,255,255,0.03);
+  }
+
+  th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 14px 16px;
+    font-size: 15px;
+    border-bottom: 1px solid rgba(42,42,58,0.5);
+    vertical-align: top;
+    line-height: 1.6;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tr:hover td { background: rgba(108,99,255,0.04); }
+
+  .step-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    white-space: nowrap;
+    width: 60px;
+  }
+
+  .step-action {
+    color: var(--muted);
+    font-size: 13px;
+    white-space: nowrap;
+    width: 120px;
+  }
+
+  .step-detail {
+    color: var(--text);
+    font-size: 14px;
+  }
+
+  .step-result {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--accent2);
+    white-space: nowrap;
+  }
+
+  /* Tips box */
+  .tip-box {
+    margin-top: 16px;
+    background: rgba(0,212,161,0.07);
+    border: 1px solid rgba(0,212,161,0.2);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 14px;
+    color: var(--success);
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  /* Error */
+  .error-box {
+    background: rgba(255,77,109,0.08);
+    border: 1px solid rgba(255,77,109,0.25);
+    border-radius: 12px;
+    padding: 16px 20px;
+    color: var(--error);
+    font-size: 14px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 16px;
+  }
+
+  /* Reset btn */
+  .reset-btn {
+    margin-top: 20px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    padding: 10px 20px;
+    font-size: 14px;
+    font-family: 'Sarabun', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .reset-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🧠</div>
+      <h1>เฉลย AI</h1>
+    </div>
+    <p class="subtitle">ถ่ายรูปโจทย์ — AI เฉลยพร้อมวิธีทำให้เลย</p>
+  </header>
+
+  <!-- Upload -->
+  <div class="upload-zone" id="upload-zone">
+    <input type="file" id="file-input" accept="image/*" capture="environment">
+    <div class="upload-icon">📷</div>
+    <div class="upload-text">แตะเพื่อถ่ายรูปหรืออัปโหลดโจทย์</div>
+    <div class="upload-sub">รองรับ JPG, PNG — ทุกวิชา คณิต วิทย์ ภาษา ฯลฯ</div>
+  </div>
+
+  <!-- Preview -->
+  <div id="preview-wrap">
+    <img id="preview-img" alt="preview">
+    <button class="remove-btn" onclick="resetAll()">✕</button>
+  </div>
+
+  <!-- Solve button -->
+  <button class="solve-btn" id="solve-btn" onclick="solve()" disabled>
+    ✨ เฉลยเลย!
+  </button>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">AI กำลังวิเคราะห์โจทย์...</div>
+  </div>
+
+  <!-- Result -->
+  <div id="result-section">
+    <div class="result-header">
+      <h2>📋 เฉลย</h2>
+      <span class="badge">✓ เสร็จแล้ว</span>
+    </div>
+
+    <div class="answer-box">
+      <div class="answer-label">คำตอบ</div>
+      <div class="answer-text" id="answer-text"></div>
+    </div>
+
+    <div class="steps-card">
+      <div class="steps-card-header">
+        <span>📝 วิธีทำทีละขั้น</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ขั้นที่</th>
+            <th>การดำเนินการ</th>
+            <th>รายละเอียด</th>
+            <th>ผลลัพธ์</th>
+          </tr>
+        </thead>
+        <tbody id="steps-body"></tbody>
+      </table>
+    </div>
+
+    <div class="tip-box" id="tip-box" style="display:none">
+      <span>💡</span>
+      <span id="tip-text"></span>
+    </div>
+
+    <button class="reset-btn" onclick="resetAll()">← โจทย์ใหม่</button>
+  </div>
+
+  <div class="error-box" id="error-box" style="display:none">
+    <span>⚠️</span>
+    <span id="error-text"></span>
+  </div>
+</div>
+
+<script>
+  let imageBase64 = null;
+
+  const fileInput = document.getElementById('file-input');
+  const previewWrap = document.getElementById('preview-wrap');
+  const previewImg = document.getElementById('preview-img');
+  const solveBtn = document.getElementById('solve-btn');
+  const loading = document.getElementById('loading');
+  const resultSection = document.getElementById('result-section');
+  const errorBox = document.getElementById('error-box');
+
+  // Drag & drop
+  const zone = document.getElementById('upload-zone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) handleFile(file);
+  });
+
+  fileInput.addEventListener('change', e => {
+    if (e.target.files[0]) handleFile(e.target.files[0]);
+  });
+
+  function handleFile(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      imageBase64 = e.target.result.split(',')[1];
+      previewImg.src = e.target.result;
+      previewWrap.style.display = 'block';
+      solveBtn.disabled = false;
+      resultSection.style.display = 'none';
+      errorBox.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function resetAll() {
+    imageBase64 = null;
+    fileInput.value = '';
+    previewWrap.style.display = 'none';
+    previewImg.src = '';
+    solveBtn.disabled = true;
+    resultSection.style.display = 'none';
+    errorBox.style.display = 'none';
+    loading.style.display = 'none';
+  }
+
+  async function solve() {
+    if (!imageBase64) return;
+
+    solveBtn.disabled = true;
+    loading.style.display = 'block';
+    resultSection.style.display = 'none';
+    errorBox.style.display = 'none';
+
+    const prompt = `คุณเป็นครูผู้เชี่ยวชาญ ดูรูปโจทย์นี้แล้วเฉลยพร้อมวิธีทำแบบละเอียด
+
+ตอบเป็น JSON เท่านั้น ห้ามใส่ backtick หรือ markdown ใดๆ รูปแบบ:
+{
+  "answer": "คำตอบสุดท้าย (กระชับ)",
+  "steps": [
+    { "step": 1, "action": "ชื่อขั้นตอน", "detail": "อธิบายสิ่งที่ทำ", "result": "ผลลัพธ์ขั้นนี้" },
+    ...
+  ],
+  "tip": "เคล็ดลับหรือสูตรที่ควรจำ (ถ้ามี)"
+}
+
+ถ้าเป็นโจทย์คณิตศาสตร์ให้แสดงสูตรและการคำนวณทุกขั้น
+ถ้าเป็นโจทย์ภาษาให้อธิบายหลักไวยากรณ์
+ถ้าเป็นโจทย์วิทยาศาสตร์ให้อธิบายหลักการ`;
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 } },
+              { type: 'text', text: prompt }
+            ]
+          }]
+        })
+      });
+
+      const data = await res.json();
+      const raw = data.content.map(i => i.text || '').join('');
+      const clean = raw.replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(clean);
+
+      renderResult(parsed);
+    } catch (err) {
+      showError('วิเคราะห์ไม่ได้ครับ ลองใหม่หรืออัปโหลดรูปที่ชัดขึ้น');
+    } finally {
+      loading.style.display = 'none';
+      solveBtn.disabled = false;
+    }
+  }
+
+  function renderResult(data) {
+    document.getElementById('answer-text').textContent = data.answer || '-';
+
+    const tbody = document.getElementById('steps-body');
+    tbody.innerHTML = '';
+    (data.steps || []).forEach(s => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="step-num">ขั้น ${s.step}</td>
+        <td class="step-action">${s.action || ''}</td>
+        <td class="step-detail">${s.detail || ''}</td>
+        <td class="step-result">${s.result || ''}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    const tipBox = document.getElementById('tip-box');
+    if (data.tip) {
+      document.getElementById('tip-text').textContent = data.tip;
+      tipBox.style.display = 'flex';
+    } else {
+      tipBox.style.display = 'none';
+    }
+
+    resultSection.style.display = 'block';
+  }
+
+  function showError(msg) {
+    document.getElementById('error-text').textContent = msg;
+    errorBox.style.display = 'flex';
+  }
+</script>
+</body>
+</html>
